@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all unknown paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email in ['yadavshiv16478@gmail.com', 'mohityadav802316@gmail.com'] && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['name', 'message', 'createdAt', 'read']) &&
+        data.keys().hasOnly(['name', 'email', 'message', 'createdAt', 'read', 'archived', 'source']) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+        data.message is string && data.message.size() >= 2 && data.message.size() <= 2000 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+        (!('archived' in data) || data.archived is bool) &&
+        (!('source' in data) || (data.source is string && data.source.size() <= 50)) &&
+        data.read == false &&
+        data.createdAt == request.time;
+    }
+
+    // Connection testing endpoint
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // Visitor contact messages
+    match /messages/{messageId} {
+      // Anyone can create a valid contact message
+      allow create: if isValidId(messageId) && isValidMessage(request.resource.data);
+      // Explicitly allow get, list, and delete for authenticated admins
+      allow get, list, delete: if isAdmin();
+      // Allow update for read/archived status
+      allow update: if isAdmin() && isValidId(messageId) && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'archived'])
+      );
+    }
+
+    // Portfolio Images metadata collection
+    match /images/{imageId} {
+      // Public visitors can only view published images; Admins can view all (draft/unpublished + published)
+      allow get, list: if (resource.data.isPublished == true) || isAdmin();
+      // Only authenticated admin can create, update, or delete portfolio images
+      allow create, update, delete: if isAdmin() && isValidId(imageId);
+    }
+
+    // Global website configuration settings (Hero, Profile, Customizer)
+    match /settings/{settingId} {
+      allow read: if isValidId(settingId);
+      allow write: if isAdmin() && isValidId(settingId);
+    }
+
+    // Admin profiles
+    match /admins/{adminId} {
+      allow read: if isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow write: if isAdmin();
+    }
+  }
+}

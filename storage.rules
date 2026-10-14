@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email in ['yadavshiv16478@gmail.com', 'mohityadav802316@gmail.com'] &&
+        request.auth.token.email_verified == true
+      );
+    }
+
+    // Portfolio images folder
+    match /portfolio/{allPaths=**} {
+      // Anyone can view uploaded portfolio images
+      allow read: if true;
+      // Only authenticated admin can upload or delete images, up to 10MB
+      allow write: if isAdmin() &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+  }
+}

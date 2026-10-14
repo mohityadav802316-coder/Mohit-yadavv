@@ -1,0 +1,176 @@
+{
+  "entities": {
+    "Message": {
+      "title": "Message",
+      "description": "Visitor contact message left on the cyberpunk portfolio",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Name of the visitor"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Optional email address of the visitor"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2000,
+          "description": "Content of the message"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Status whether admin has read this message"
+        },
+        "archived": {
+          "type": "boolean",
+          "description": "Whether message has been archived"
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Source form of message submission"
+        }
+      },
+      "required": ["name", "message", "createdAt", "read"]
+    },
+    "PortfolioImage": {
+      "title": "PortfolioImage",
+      "description": "Metadata for photographs uploaded to Firebase Storage and displayed across the portfolio",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Optional title of the image"
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "English caption for the image"
+        },
+        "captionHi": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Hindi caption for the image"
+        },
+        "downloadUrl": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Public download URL from Firebase Storage"
+        },
+        "storagePath": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Internal path in Firebase Storage bucket"
+        },
+        "section": {
+          "type": "string",
+          "enum": ["profile", "about", "gallery", "roadmap"],
+          "description": "Target website section"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["personal", "setup", "ai_creation", "coding", "blueprint"],
+          "description": "Category tag for filtering"
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "Display order rank"
+        },
+        "isPublished": {
+          "type": "boolean",
+          "description": "Whether image is published on public portfolio"
+        },
+        "isMainProfile": {
+          "type": "boolean",
+          "description": "Whether image is the primary avatar"
+        },
+        "isHeroOrbit": {
+          "type": "boolean",
+          "description": "Whether image is included in the 3D Hero Photo-Orbit"
+        },
+        "orbitIndex": {
+          "type": "number",
+          "description": "Specific orbital slot index (0 to 4)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of upload"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last edit"
+        }
+      },
+      "required": ["downloadUrl", "storagePath", "section", "isPublished", "createdAt"]
+    },
+    "SiteSetting": {
+      "title": "SiteSetting",
+      "description": "Configurable portfolio settings and hero parameters managed from admin center",
+      "type": "object",
+      "properties": {
+        "heroTitle": { "type": "string", "maxLength": 150 },
+        "heroSubtitle": { "type": "string", "maxLength": 250 },
+        "heroBioEn": { "type": "string", "maxLength": 1000 },
+        "heroBioHi": { "type": "string", "maxLength": 1000 },
+        "orbitAutoRotateSpeed": { "type": "number" },
+        "orbitCycleInterval": { "type": "number" },
+        "themeGlowColor": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "AdminProfile": {
+      "title": "AdminProfile",
+      "description": "Authorized administrator profile",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Admin email address"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "description": "Administrator role"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when admin profile was created"
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/messages/{messageId}": {
+      "schema": { "$ref": "Message" },
+      "description": "Collection of visitor contact messages"
+    },
+    "/images/{imageId}": {
+      "schema": { "$ref": "PortfolioImage" },
+      "description": "Collection of portfolio images and storage metadata"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "SiteSetting" },
+      "description": "Collection of website layout and theme settings"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "AdminProfile" },
+      "description": "Authorized admin users for dashboard access"
+    }
+  }
+}
